@@ -6,8 +6,9 @@ service ManagingService {
     rpc CreateTask(Contact) returns (FlagResponse) {}
     rpc UpdateTask(UpdateTaskRequest) returns (FlagResponse) {}
     rpc SearchTask(SearchTaskRequest) returns (SearchTaskResponse) {}
-
     rpc DeleteTask(DeleteTaskRequest) returns (FlagResponse) {}
+
+    rpc CountTask(CountRequest) returns (CountTaskResponse) {}
     rpc GetAllTasks(GetAllRequest) returns (GetAllResponse) {}
 }
 
@@ -44,6 +45,7 @@ message DeleteTaskRequest{
 }
 
 message GetAllRequest {}
+message CountRequest {}
 
 message GetAllResponse {
     repeated Contact tasks = 1;
@@ -55,4 +57,7 @@ message FlagResponse {
 
 message SearchTaskResponse {
     repeated Contact tasks = 1;
+}
+message CountTaskResponse {
+    int64 count = 1;
 }

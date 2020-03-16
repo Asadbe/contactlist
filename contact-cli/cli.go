@@ -60,7 +60,11 @@ func main() {
 		log.Fatalf("Could not list tasks: %v", err)
 	}
 	fmt.Println(res)
-
+	cou, err := client.CountTask(context.Background(), &pb.CountRequest{})
+	if err != nil {
+		log.Fatalf("Could not list tasks: %v", err)
+	}
+	fmt.Println(cou)
 	tasks, err := client.SearchTask(context.Background(), &pb.SearchTaskRequest{
 		Id: "oy%",
 	})
@@ -70,10 +74,10 @@ func main() {
 	fmt.Println(tasks)
 
 	res, err = client.UpdateTask(context.Background(), &pb.UpdateTaskRequest{Id: 5, Task: &pb.Contact{
-		Name:  "Oybek",
-		Email: "bfbashhj",
-		Number:   "412345678",
-		Age: "12",
+		Name:   "Oybek",
+		Email:  "bfbashhj",
+		Number: "412345678",
+		Age:    "12",
 	}})
 	if err != nil {
 		log.Fatalf("Could not list tasks: %v", err)

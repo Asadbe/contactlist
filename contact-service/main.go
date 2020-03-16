@@ -26,19 +26,19 @@ var err error
 
 // Contact ...
 type Contact struct {
-	id    int    `db:"serial not null"`
-	name  string `db:"not null"`
+	id     int    `db:"serial not null"`
+	name   string `db:"not null"`
 	number string `db:"not null"`
-	age   string `db:"not null"`
-	email   string `db:"not null"`
-
+	age    string `db:"not null"`
+	email  string `db:"not null"`
 }
 
 // ContactManagerI ...
 type ContactManagerI interface {
 	Add(*pb.Contact) error
 	Update(int64, *pb.Contact) error
-	Search(name string) ([]*pb.Contact,error)
+	Search(name string) ([]*pb.Contact, error)
+	Count() (int64, error)
 	Delete(id int64) error
 	GetAll() ([]*pb.Contact, error)
 }
@@ -77,7 +77,7 @@ func ProtoToStruct(tsk *pb.Contact) Contact {
 func (s *sqlxDB) Add(a *pb.Contact) error {
 	insertionQuery := `insert into contacts (name, email, number,age) values ($1, $2, $3,$4)`
 
-	_, err := s.connectDB.Exec(insertionQuery, a.Name, a.Email, a.Number,a.Age)
+	_, err := s.connectDB.Exec(insertionQuery, a.Name, a.Email, a.Number, a.Age)
 
 	if err != nil {
 		return err
@@ -85,12 +85,25 @@ func (s *sqlxDB) Add(a *pb.Contact) error {
 
 	return nil
 }
+func (s *sqlxDB) Count() (int64,error) {
+	var a int64
+	insertionQuery := `select count(*) from contacts`
+
+	err := s.connectDB.QueryRow(insertionQuery).Scan(&a)
+	fmt.Println(a)
+
+	if err != nil {
+		return 0,err
+	}
+
+	return a, err
+}
 
 func (s *sqlxDB) Update(id int64, pb *pb.Contact) error {
 	updatingQuery := `update contacts set name=$1,email=$2, number=$3,age=$4
 	where id =$5`
 
-	_, err := s.connectDB.Exec(updatingQuery, pb.Name, pb.Email, pb.Number,pb.Age,id)
+	_, err := s.connectDB.Exec(updatingQuery, pb.Name, pb.Email, pb.Number, pb.Age, id)
 
 	if err != nil {
 		fmt.Println("Can't update")
@@ -99,7 +112,7 @@ func (s *sqlxDB) Update(id int64, pb *pb.Contact) error {
 
 	return nil
 }
-func (s *sqlxDB) Search(name string) ([]*pb.Contact,error) {
+func (s *sqlxDB) Search(name string) ([]*pb.Contact, error) {
 	as := []*pb.Contact{}
 	updatingQuery := `select id, name, email, number, age from contacts where name ilike $1`
 
@@ -115,15 +128,15 @@ func (s *sqlxDB) Search(name string) ([]*pb.Contact,error) {
 			fmt.Println("Can't scan struct")
 			return nil, err
 		}
-		as=append(as,ts)
-	}
-		
-	if err != nil {
-		fmt.Println("Can't update")
-		return nil,err
+		as = append(as, ts)
 	}
 
-	return as,nil
+	if err != nil {
+		fmt.Println("Can't update")
+		return nil, err
+	}
+
+	return as, nil
 }
 
 func (s *sqlxDB) Delete(id int64) error {
@@ -157,7 +170,7 @@ func (s *sqlxDB) GetAll() ([]*pb.Contact, error) {
 
 	for rows.Next() {
 		ts := &pb.Contact{}
-		err = rows.Scan(&ts.Id, &ts.Name, &ts.Email, &ts.Number,&ts.Age)
+		err = rows.Scan(&ts.Id, &ts.Name, &ts.Email, &ts.Number, &ts.Age)
 		if err != nil {
 			fmt.Println("Can't scan struct")
 			return nil, err
@@ -186,6 +199,14 @@ func (s *service) UpdateTask(ctx context.Context, req *pb.UpdateTaskRequest) (*p
 		return nil, err
 	}
 	return &pb.FlagResponse{Flag: true}, nil
+}
+
+func (s *service) CountTask(ctx context.Context, req *pb.CountRequest) (*pb.CountTaskResponse, error) {
+	counts, err := s.tmi.Count()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CountTaskResponse{Count: counts}, nil
 }
 
 func (s *service) SearchTask(ctx context.Context, req *pb.SearchTaskRequest) (*pb.SearchTaskResponse, error) {
